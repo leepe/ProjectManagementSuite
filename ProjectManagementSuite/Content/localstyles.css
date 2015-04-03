@@ -1,0 +1,75 @@
+﻿@-ms-viewport { 
+    width: device-width;
+    height: device-height;
+}
+ html {
+       margin: 4px;
+       height: auto;
+       width: auto;
+       zoom:0.8;    /*this is the key to fitting chrome & firefox*/
+}
+body {
+       margin: 4px;
+       padding: 4px;
+       width: auto;
+       padding-top: 70px;
+}
+.modal-dialog { width: 600px; } /* container width */
+.modal-header { color:#ffffff; background-color:#5cb85c; font-weight:bold;}
+.modal-body { background-color:rgba(92, 184, 92, 0.25)}
+.form-control::-webkit-input-placeholder { color: rgba(255, 255, 255, 0.25); }  /* override default placeholder text color */
+.form-horizontal {padding-left:5px; padding-top:30px;}
+.form-group input,.textarea {background-color:#5cb85c; color:#ffffff; font-weight:200;}
+.form-group input[readonly] {background-color:#ffffff; color:#5cb85c; } /* added 28/01/2015 - disable changes to ProjID */
+.form-group label {color:#5cb85c;font-weight:bold;}
+.fileUpload {
+	position: relative;
+	overflow: hidden;
+}
+.fileUpload input {
+	position: absolute;
+	top: 0;
+	right: 0;
+	margin: 0;
+	padding: 0;
+	cursor: pointer;
+	opacity: 0;
+}
+
+/*.prodbyproj table, th, td {
+    border: 1px solid black;
+    border-collapse: collapse;
+}
+
+.prodbyproj th, td {
+    padding: 5px;
+}
+
+.prodbyproj th {
+    text-align: left;
+}*/
+
+/*.progress {
+    margin-bottom: 0;
+}
+.navbar-fixed-top {
+    height:50px;
+    display: block;
+    position: fixed;
+}*/
+/*.borderless td {
+    border: none;
+    border-top: none;
+    border-bottom: none;
+    border-color:none;
+    padding: 0px;
+}
+
+.table>thead>tr>th, .table>tbody>tr>th, .table>tfoot>tr>th, .table>thead>tr>td, .table>tbody>tr>td, .table>tfoot>tr>td {
+border: none!important;
+border-top: none!important;
+border-bottom: none!important;
+line-height:none;
+padding:0px;
+}*/
+

@@ -1,0 +1,69 @@
+﻿
+// items-that-dont-exist at all - ie typos
+
+use STAGING
+go
+with currItems as
+(
+	select distinct b.[State],b.ProjID,b.ProjName,a.ProjItem,a.Whse,SUM(a.Qty) Qty from dbo.[ProjectItems] a inner join dbo.[Projects] b on (a.ProjID=b.ProjID) where
+	         a.[Month] >= cast(convert(varchar(10),DATEADD(dd, -DAY(GETDATE()) + 1, GETDATE()),112) as integer)
+	         and b.ProjManFlag='Yes'
+	         group by b.[State],b.ProjID,b.ProjName,a.ProjItem,a.Whse
+)
+select currItems.* from currItems left join dbo.[MVXItemMaster] b on (currItems.ProjItem=b.ITEM) where b.BUShort is null order by currItems.State,currItems.ProjID
+
+
+// item-warehouse-state that don't exist - exclude the items that don't exist
+
+use STAGING
+go
+with currItems as
+(
+	select distinct b.[State],b.ProjID,b.ProjName,a.ProjItem,a.Whse,SUM(a.Qty) Qty from dbo.[ProjectItems] a inner join dbo.[Projects] b on (a.ProjID=b.ProjID) where
+	         a.[Month] >= cast(convert(varchar(10),DATEADD(dd, -DAY(GETDATE()) + 1, GETDATE()),112) as integer)
+	         and b.ProjManFlag='Yes'
+	         group by b.[State],b.ProjID,b.ProjName,a.ProjItem,a.Whse
+),
+nonexItem as
+(
+select b.BUShort,currItems.[State],currItems.ProjID,currItems.ProjName,currItems.ProjItem,currItems.Whse,currItems.Qty from 
+       currItems left join dbo.[MVXItemMaster] b on (currItems.ProjItem=b.ITEM) where b.BUShort is null
+),
+nonexItemWh as
+(
+select currItems.State,currItems.ProjID,currItems.ProjName,currItems.ProjItem,currItems.Whse,currItems.Qty,b.Pareto,b.FcstMethod from 
+       currItems left join dbo.[DSX_ITEM_WAREHOUSE_MASTER] b on (currItems.ProjItem=b.Item and currItems.Whse=b.Whse and currItems.State=b.State)
+       where b.Item is null
+),
+exclnonexItem as
+(
+select nonexItemWh.State,nonexItemWh.ProjID,nonexItemWh.ProjName,nonexItemWh.ProjItem,nonexItemWh.Whse,nonexItemWh.Qty from 
+       nonexItemWh left join nonexItem on (nonexItemWh.ProjItem=nonexItem.ProjItem) where nonexItem.ProjItem is null
+)
+select exclnonexItem.State,exclnonexItem.ProjID,exclnonexItem.ProjName,exclnonexItem.ProjItem,b.ItemDesc,exclnonexItem.Whse,exclnonexItem.Qty,isnull(c.NumLine,0) Trns from 
+       exclnonexItem inner join dbo.[MVXItemMaster] b on (exclnonexItem.ProjItem=b.Item)
+       left join dbo.[UNIQUE_BUSINESSKEYS] c on (exclnonexItem.State=c.SalesState and exclnonexItem.Whse=c.Whse and exclnonexItem.ProjItem=c.Item)
+
+
+// item-warehouse-state that exist but are either F,G,J class pareto, RoP or other item	   
+
+use STAGING
+go
+with currItems as
+(
+	select distinct b.[State],b.ProjID,b.ProjName,a.ProjItem,a.Whse,SUM(a.Qty) Qty from dbo.[ProjectItems] a inner join dbo.[Projects] b on (a.ProjID=b.ProjID) where
+	         a.[Month] >= cast(convert(varchar(10),DATEADD(dd, -DAY(GETDATE()) + 1, GETDATE()),112) as integer)
+	         and b.ProjManFlag='Yes'
+	         group by b.[State],b.ProjID,b.ProjName,a.ProjItem,a.Whse
+),
+ItemWh as
+(
+select c.BUShort,currItems.State,currItems.ProjID,currItems.ProjName,currItems.ProjItem,c.ITEMDESC,currItems.Whse,currItems.Qty,b.Pareto,b.FcstMethod from 
+       currItems inner join dbo.[DSX_ITEM_WAREHOUSE_MASTER] b on (currItems.ProjItem=b.Item and currItems.Whse=b.Whse and currItems.State=b.State)
+       inner join dbo.[MVXItemMaster] c on (currItems.ProjItem=c.ITEM)
+       where b.Pareto in ('F','G','J') and b.FcstMethod not in ('Y')
+)
+select ItemWh.BUShort,ItemWh.State,ItemWh.ProjID,ItemWh.ProjName,ItemWh.ProjItem,ItemWh.ITEMDESC,
+       ItemWh.Whse,ItemWh.Qty,ItemWh.Pareto,ItemWh.FcstMethod from ItemWh
+
+

@@ -1,0 +1,295 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title>Project Management Suite</title>
+    <!--JQUERY_UI CDN-->
+    <!--works for ie 9 -->
+    <link rel="stylesheet" type="text/css" href="http://code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css" />
+    <link rel="stylesheet" type="text/css" href="http://cdn.datatables.net/plug-ins/9dcbecd42ad/integration/jqueryui/dataTables.jqueryui.css" />
+    <link href="Content/bootstrap.min.css" rel="stylesheet" /> <!--get the button background colors-->
+    <link href="Content/font-awesome.min.css" rel="stylesheet" /> <!--get the button faces-->
+    <link href="Content/localstyles.css" rel="stylesheet" />
+    <link href="Content/alertify.core.css" rel="stylesheet" />
+    <link href="Content/alertify.default.css" rel="stylesheet" />
+    <link rel='shortcut icon' href='Content/favicon.ico' type='image/x-icon'>
+    <!----------------------------------------------------------------------------------------------------------------------------->
+    <!--MUSTACHE TEMPLATE - double braces refer to MUSTACHE not ANGULAR data-binding To Add To <div id="files-placeholder"></div>-->
+    <!--placed outside angularjs scope-->
+    <!----------------------------------------------------------------------------------------------------------------------------->
+    <!---------------------------------------------->
+    <!-- FRAME FOR INDIVIDUAL FILE NAME TO UPLOAD -->
+    <!---------------------------------------------->
+    <script id="fileUploadItemTemplate" type="text/html">
+        <div class="list-group-item list-group-item-success">
+            <button type="button" class="close" onclick="$(this).parent().remove()">&times;</button>
+            <span class="glyphicon glyphicon-file"></span>&nbsp;&nbsp;{{filename}}
+        </div>
+    </script>
+    <!---------------------------------------------->
+    <!-- FRAME FOR SELECTED FILES TO UPLOAD -------->
+    <!---------------------------------------------->
+    <script id="fileUploadTemplate" type="text/html">
+        <form>
+            <span class="fileUpload btn btn-default btn-success">
+                <span class="glyphicon glyphicon-upload"></span> Upload Project file(s)
+                <input type="file" id="selectedFiles" multiple="multiple" />
+            </span>
+            <div id="files-placeholder"></div>
+        </form>
+    </script>
+</head>
+<!--ADD IN MARGIN/PADDING on HTML BODY-->
+<body ng-app="ProjectApp">
+    <div ng-controller="withAjaxCtrl">
+        <div class="container">
+            <div style="margin:2px;padding:2px;text-align:center;background-color:#5cb85c;" class="jumbotron">
+                <h3><font color="white"><i class="fa fa-asterisk"></i>&nbsp;&nbsp;Project Management Suite&nbsp;&nbsp;<i class="fa fa-asterisk"></i></font></h3>
+            </div>
+        </div>
+        <div ng-controller="withProjectLines">
+            <p class="text-danger"><strong>{{ bbc }}</strong></p>
+            <div id="projectdownload"></div>
+        </div>
+        <br/>
+        <table datatable="" dt-options="dtOptions" dt-columns="dtColumns" class="row-border hover stripe compact"></table>
+        <div class="btn-toolbar">  <!--Use btn-toolbar not btn-group to get gutter between buttons-->
+        <button class="btn btn-success" ng-click="uploadFiles()" data-toggle="modal" data-target="#AddNewProjectModal">Upload New Project<br/><i class="fa fa-upload"></i></button>
+        <button class="btn btn-success" data-toggle="modal" data-target="#GenerateProjectTemplateModal">New Project WorkBk<br /><i class="fa fa-download"></i></button>
+        <button class="btn btn-success" data-toggle="modal" data-target="#ItemByProjectByStateModal">Item By Project|State<br /><i class="fa fa-question-circle"></i></button>
+        <button class="btn btn-danger" ng-click="generateProblemLog()">Product Issues Log<br /><i class="fa fa-fire-extinguisher"></i></button>
+        <div id="problemitemlog"></div>
+        </div>
+        <br/>
+        <!------------------------------------------------------------------------------------------------------------------->
+        <!--ADD IN MODAL PAGE TO EDIT RECORD -->
+        <!------------------------------------------------------------------------------------------------------------------->
+        <div class="modal fade" id="EditProjectModal" tabindex="-1" role="dialog" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                        <h4 class="modal-title">Amend Project Details for Project : {{editrecord.ProjID}}</h4>
+                    </div>
+                    <div class="modal-body">
+                        <form class="form-horizontal " role="form" action="#">
+                            <div class="form-group">
+                                <label class="control-label col-sm-4" for="projid">Project ID</label>
+                                <div class="col-lg-7">
+                                    <input type="text" id="projid" ng-model="editrecord.ProjID" placeholder="Project ID" readonly class="form-control"/>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="control-label col-sm-4" for="projnum">Project Number</label>
+                                <div class="col-lg-7">
+                                    <input type="text" id="projnum" ng-model="editrecord.ProjNum" placeholder="Project Number" class="form-control"/>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="control-label col-sm-4" for="projname">Project Name</label>
+                                <div class="col-lg-7">
+                                    <input type="text" id="projname" ng-model="editrecord.ProjName" placeholder="Project Name" class="form-control"/>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="control-label col-sm-4" for="projname">Project Desc</label>
+                                <div class="col-lg-7">
+                                    <input type="text" id="projdesc" ng-model="editrecord.ProjDesc" placeholder="Project Desc" class="form-control"/>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="control-label col-sm-4" for="projstate">Sales State</label>
+                                <div class="col-lg-7">
+                                    <input type="text" id="projstate" ng-model="editrecord.State" placeholder="Sales State" class="form-control"/>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="control-label col-sm-4" for="projmanflag">Manual Forecast Flag</label>
+                                <div class="col-lg-7">
+                                    <input type="text" id="projmanflag" ng-model="editrecord.ProjManFlag" placeholder="Manual Forecast Flag" class="form-control"/>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="control-label col-sm-4" for="mvxprojnum">MOVEX Project Orders</label>
+                                <div class="col-lg-7">
+                                    <input type="text" id="mvxprojnum" ng-model="editrecord.MVXProjNum2" placeholder="MOVEX Project Orders" class="form-control" />
+                                </div>
+                            </div>
+                        </form>
+                        <div class="modal-footer">
+                            <!--MODAL CODE-->
+                            <button type="button" class="btn-block btn-success" ng-click="updedit(editrecord)" data-dismiss="modal">Submit Amended Project Details</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!------------------------------------------------------------------------------------------------------------------->
+        <!--ADD IN MODAL PAGE TO EXTRACT INFORMATION ON PROJECTS -->
+        <!------------------------------------------------------------------------------------------------------------------->
+        <div class="modal fade" id="ItemByProjectByStateModal" tabindex="-1" role="dialog" aria-hidden="true">
+            <div class="modal-dialog" style="overflow:scroll;">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" ng-click="clearProjectForItem()" data-dismiss="modal" aria-hidden="true">×</button>
+                        <h4 class="modal-title">Extract Manual Forecasts State Projects For Item : {{ itemToGet }}</h4>
+                    </div>
+                    <div class="modal-body">
+                        <div class="container-fluid" style="width:100%;">
+                            Enter Product:<br/>
+                            <input type="text" ng-model="itemToGet" name="product" />
+                            <input type="button" value="Submit" ng-click="getProjectData()" />
+                            <div id="table-for-item-by-projects" ng-repeat="st in statedata">
+                                <h5>{{ st.state }}
+                                </h5>
+                                <table class="prodbyproj" style="width:90%;border:1px solid black;border-collapse:collapse;">
+                                    <thead>
+                                        <tr>
+                                            <th style="width:20px;border:1px solid black;border-collapse:collapse;padding:5px;text-align:left;">Proj-ID</th>
+                                            <th style="width:200px;border:1px solid black;border-collapse:collapse;padding:5px;text-align:left;">Project Name</th>
+                                            <th style="width:60px;border:1px solid black;border-collapse:collapse;padding:5px;text-align:left;">Qty Past Due</th>
+                                            <th style="width:60px;border:1px solid black;border-collapse:collapse;padding:5px;text-align:left;">Qty Current</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr ng-repeat="proj in st.ProjectDetails">
+                                            <td style="width:20px;border:1px solid black;border-collapse:collapse;padding:5px;">{{ proj.projID }}</td>
+                                            <td style="width:200px;border:1px solid black;border-collapse:collapse;padding:5px;">{{ proj.projname }}</td>
+                                            <td style="width:60px;border:1px solid black;border-collapse:collapse;padding:5px;">{{ proj.pastdue }}</td>
+                                            <td style="width:60px;border:1px solid black;border-collapse:collapse;padding:5px;">{{ proj.current }}</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="modal-footer">
+                                <!--MODAL CLOSE CODE -- closed by clicking it OR closed programmatically $scope.uploadFiles-->
+                                <button id="Button1" type="button" ng-click="clearProjectForItem()" class="btn-success" data-dismiss="modal" aria-hidden="true">Close</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!------------------------------------------------------------------------------------------------------------------->
+        <!--ADD IN MODAL PAGE TO UPLOAD NEW PROJECT TEMPLATE FILES -->
+        <!------------------------------------------------------------------------------------------------------------------->
+        <div class="modal fade" id="AddNewProjectModal" tabindex="-1" role="dialog" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                        <h4 class="modal-title">Add New Project To DB</h4>
+                    </div>
+                    <div class="modal-body">
+                        <div class="container-fluid" style="width:100%;">
+                            <div id="upload-files-placeholder"></div>
+                            <div class="modal-footer">
+                                <!--MODAL CLOSE CODE -- closed by clicking it OR closed programmatically $scope.uploadFiles-->
+                                <button id="shutDownUpload" type="button" class="btn-success" data-dismiss="modal" aria-hidden="true">Close</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!------------------------------------------------------------------------------------------------------------------->
+        <!--ADD IN MODAL PAGE TO MANAGE GENERATION OF NEW PROJECT TEMPLATE FILES -->
+        <!------------------------------------------------------------------------------------------------------------------->
+        <div class="modal fade" id="GenerateProjectTemplateModal" tabindex="-1" role="dialog" aria-hidden="true">
+            <div class="modal-dialog" style="width:1050px;">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                        <h4 class="modal-title">Template Generator for New Projects</h4>
+                    </div>
+                    <div class="modal-body">
+                        <table class="table table-condensed borderless" style="width:auto;">
+                            <tr>
+                                <th>Project Number</th>
+                                <th>Project Name</th>
+                                <th>Project State</th>
+                                <th>Project Type</th>
+                                <th>MOVEX Orders</th>
+                            </tr>
+                            <tr ng-repeat="pr in proj">
+                                <td>
+                                    <input type="text" ng-model="pr.projectNumber" class="input-small">
+                                    <div class="bottom">
+                                        <a class="btn btn-danger btn-xs" href="#" ng-click="removeProject($index)">Delete</a>
+                                    </div>
+                                </td>
+                                <td>
+                                    <input type="text" ng-model="pr.projectName" class="input-small" />
+                                </td>
+                                <td>
+                                    <input type="text" ng-model="pr.projectState" class="input-small" />
+                                </td>
+                                <td>
+                                    <input type="text" ng-model="pr.projectType" class="input-small" />
+                                </td>
+                                <td class="borderless">
+                                    <table class="table table-condensed borderless" style="width:auto;background-color:rgba(92, 184, 92, 0.15);">
+                                        <tbody ng-repeat="ord in pr.mvxorders">
+                                            <tr class="borderless">
+                                                <td class="borderless">
+                                                    <input type="text" ng-model="ord.order" class="input-small" style="border-bottom:none;" />
+                                                </td>
+                                                <td class="borderless">
+                                                    <a class="btn btn-danger btn-xs" href="#" ng-click="removeMovexOrder($parent.$index,$index)">Delete</a>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                        <tr>
+                                            <td class="borderless">
+                                                <a class="btn btn-success btn-xs" href="#" ng-model="neword" ng-click="addMovexOrder($index,neword)">Add Order</a>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                 </td>
+                            </tr>
+                            <tr>
+                                <td class="borderless">
+                                    <div class="btn-group">
+                                        <a class="btn btn-success btn-sm" href="#" ng-click="addProject()">Add Project</a>
+                                        <a class="btn btn-success btn-sm" href='#' ng-click="sendJSONtoServer()">Generate Template(s)</a>
+                                    </div>
+                                </td>
+                            </tr>
+                        </table>
+                        <div id="response"></div>
+                        <div class="modal-footer">
+                            <!--MODAL CLOSE CODE -- closed by clicking it with JSON data structure reset to original example -->
+                            <button id="shutDownTempl" type="button" class="btn-success" data-dismiss="modal" aria-hidden="true">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!---ADD IN FOOTER WITH AJAX ACTIVITY STATUS GIF-->
+        <div class="footer">
+            <br/>
+            <div id="loading">
+                <p><img src="Content/AjaxGif/719.GIF" /></p>
+            </div>
+            <p>Caroma B&K Demand Planning Copyright (c) 2014</p>
+        </div>
+
+        <script src="Scripts/jquery-2.1.1.min.js"></script>
+        <script src="Scripts/DataTables-1.10.3/jquery.dataTables.min.js"></script>
+        <script src="Scripts/angular.min.js"></script>
+        <script src="Scripts/angular-datatables.min.js"></script>
+        <!--JQUERY-UI-->
+        <script src="Scripts/jquery-ui-1.11.2.min.js"></script>
+        <script src="http://cdn.datatables.net/1.10.4/js/jquery.dataTables.min.js"></script>
+        <script src="http://cdn.datatables.net/plug-ins/9dcbecd42ad/integration/jqueryui/dataTables.jqueryui.js"></script>
+        <script src="Scripts/DataTables-1.10.3/dataTables.tableTools.min.js"></script>
+        <script src="Scripts/bootstrap.min.js"></script>
+        <!--LOCAL ANGULARJS CONTROLLER-->
+        <script src="Scripts/localAngular.js"></script>
+        <!--MUSTACHE TEMPLATES-->
+        <script src="Scripts/mustache.js"></script>
+        <!--ALERTIFY---->
+        <script src="Scripts/alertify.min.js"></script>
+    </div>
+</body>
+</html>
