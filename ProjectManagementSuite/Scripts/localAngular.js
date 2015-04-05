@@ -28,7 +28,8 @@ projApp.controller('withAjaxCtrl', function ($scope, $http, $compile, DTOptionsB
     //---------------------------------------------------------------------------------------------------------------------
     //
     $scope.getProjectData = function () {
-        $http({ method: 'GET', url: 'api/itembystate/' + $scope.itemToGet.replace(/\./g,'_') }).
+        $http({ method: 'GET', url: 'api/itembystate/?id=' + $scope.itemToGet }).
+        //$http({ method: 'GET', url: 'api/itembystate/' + $scope.itemToGet.replace(/\./g,'_') }).
         success(function (data) {
             var jdat = JSON.parse(data);
             $scope.statedata = [];

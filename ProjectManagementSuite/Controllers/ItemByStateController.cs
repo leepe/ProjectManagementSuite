@@ -47,7 +47,8 @@ namespace ProjectManagementSuite.Controllers
         public string Get(string id)
         {
             // replace underscores in product name with periods before query
-            string json = ProjectManagementSuite.CSharpLogic.GetProjectsByItemByState.GetJsonStringForItemByState(id.Replace('_','.'));
+            //string json = ProjectManagementSuite.CSharpLogic.GetProjectsByItemByState.GetJsonStringForItemByState(id.Replace('_','.'));
+            string json = ProjectManagementSuite.CSharpLogic.GetProjectsByItemByState.GetJsonStringForItemByState(id);
             return json;
         }
     }
